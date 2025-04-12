@@ -61,6 +61,8 @@ types objective_overwrites {
                     layoutpolicy_vertical = expanding
                     spacing = 7 # CMF - Matches vanilla spacing between objectives and sandbox button
                     
+                    datacontext = "[AccessGameRules]" # CMF - For game rule persistence
+                    
                     # Objectives
                     scrollarea = {
                         minimumsize = { 1400 60 }
@@ -299,13 +301,72 @@ types objective_overwrites {
                                 }
                             }
 
+                            # CMF - Invisible widget for driving game rules persistence when selecting Sandbox objective
+                            # Required because (as of 1.8.7) toggling off from the selected objective will reset game rules to default
+                            widget = {
+                                size    = { 0 0 }
+                                visible = "[GetVariableSystem.Exists('CMF_objectives_load_game_rules')]"
+                                max_update_rate = 10000
+                                
+                                textbox = { # "VAR SET" # DEBUG - TODO: Delete
+                                    raw_text = "#r;bold DEBUG - VAR SET#!"
+                                    margin_top = 50
+                                    align = center|nobaseline
+                                    minimumsize = { 280 -1 }
+                                    maximumsize = { 280 -1 }
+                                    autoresize = yes
+                                    using = fontsize_xxl
+                                }
+                                
+                                hbox = {
+                                    datamodel = "[JominiGameRules.GetRulePresets]"
+                                    
+                                    item = {
+                                        widget = {
+                                            size    = { 0 0 }
+                                            visible = "[And(
+                                                EqualTo_string(
+                                                    GuiGameRulePreset.GetName,
+                                                    'ComModFWTest'
+                                                ),
+                                                GetVariableSystem.Exists('CMF_objectives_load_game_rules')
+                                            )]"
+                                            max_update_rate = 120
+                                            
+                                            textbox = { # Show [GuiGameRulePreset.GetName] # DEBUG - TODO: Delete
+                                                raw_text = "#blue;bold ITEM: [GuiGameRulePreset.GetName]#!"
+                                                margin_top = 100
+                                                align = center|nobaseline
+                                                minimumsize = { 280 -1 }
+                                                maximumsize = { 280 -1 }
+                                                autoresize = yes
+                                                using = fontsize_xxl
+                                            }
+                                            
+                                            state = {
+                                                name      = _show
+                                                #start_sound = {
+                                                #    soundeffect = "event:/SFX/UI/SideBar/journal"
+                                                #}
+                                                on_start = "[JominiGameRules.OnSelectPreset]"
+                                                on_start = "[JominiGameRules.DeletePresetWithName(GuiGameRulePreset.GetName)]"
+                                                on_start = "[GetVariableSystem.Toggle('CMF_objectives_load_game_rules')]"
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                            
                             button = {
                                 using = glow_button_border
                                 size = { 100% 100% }
+                                #onclick = "[JominiGameRules.OnPresetSaveNameChange( 'ComModFWTest' )]"
+                                #onclick = "[JominiGameRules.SavePreset]"
                                 onclick = "[GameSetup.ToggleObjective(GameSetup.GetSelectedObjective)]" # CMF - Always go to Sandbox via the Sandbox button
-                                onclick = "[GameSetup.OnStart]"
+                                onclick = "[GetVariableSystem.Toggle('CMF_objectives_load_game_rules')]"
+                                #onclick = "[GameSetup.OnStart]" # DEBUG - TODO: Uncomment
                                 using = frame_small_mask
-                                using = start_game_button_sound
+                                #using = start_game_button_sound # DEBUG - TODO: Uncomment
                                 
                                 state = {
                                     trigger_on_create = yes
